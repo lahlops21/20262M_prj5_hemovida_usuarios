@@ -1,0 +1,37 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// Tabela unica de identidade do sistema inteiro. O MS4 so cuida de QUEM e a pessoa
+// e de qual perfil ela tem. Dados pessoais do doador ficam no MS1.
+model Usuario {
+  usuario_id            BigInt   @id @default(autoincrement())
+  usuario_perfil        Perfil
+  usuario_nome_completo String?  @db.VarChar(150)
+  usuario_email         String?  @unique(map: "usuario_email_UNIQUE") @db.VarChar(200)
+  usuario_senha_hash    String?  @db.VarChar(255)
+  usuario_matricula     String?  @unique(map: "usuario_matricula_UNIQUE") @db.VarChar(30)
+  usuario_cpf           String?  @unique(map: "usuario_cpf_UNIQUE") @db.Char(11)
+  usuario_hospital_id   BigInt?
+  usuario_status        Boolean  @default(true)
+  usuario_data_criacao  DateTime @default(now()) @db.DateTime(0)
+
+  @@map("usuario")
+}
+
+// Os nomes TEM que ser exatamente os mesmos que o MS1 e o MS3 esperam no token (claim "role").
+enum Perfil {
+  ADMIN
+  RECEPCAO
+  ENFERMAGEM
+  GESTOR_ESTOQUE
+  GESTOR_DEMANDA
+  DOADOR
+}

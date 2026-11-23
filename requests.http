@@ -1,0 +1,137 @@
+### Passo 3 - agora TODAS as rotas (menos /health e login) pedem token de ADMIN.
+### Rode primeiro o bloco 0 (login). O token dele e usado automaticamente nos outros blocos.
+### Passo 2 - testes do modulo de usuarios (extensao "REST Client" do VS Code)
+### Clique em "Send Request" acima de cada bloco. Rode na ordem.
+
+@url = http://localhost:7505
+
+### 0) Login do ADMIN (deve dar 200 com access_token)
+# @name login
+POST {{url}}/auth/login/admin
+Content-Type: application/json
+
+{
+  "email": "admin@hemovida.com",
+  "senha": "hemoLBR*&senac"
+}
+
+### 0b) Sem token (deve dar 401)
+GET {{url}}/usuarios
+
+### 0c) Senha errada (deve dar 401)
+POST {{url}}/auth/login/admin
+Content-Type: application/json
+
+{ "email": "admin.teste@hemovida.com", "senha": "errada" }
+
+### 1) Saude da API
+GET {{url}}/health
+
+### 2) Criar enfermeira (deve dar 201)
+POST {{url}}/usuarios
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.access_token}}
+
+{
+  "perfil": "ENFERMAGEM",
+  "nomeCompleto": "Ana Teste",
+  "email": "ana.teste@hemovida.com",
+  "senha": "Senha12345"
+}
+
+### 3) Repetir o mesmo e-mail (deve dar 409)
+POST {{url}}/usuarios
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.access_token}}
+
+{
+  "perfil": "ENFERMAGEM",
+  "nomeCompleto": "Ana Teste",
+  "email": "ana.teste@hemovida.com",
+  "senha": "Senha12345"
+}
+
+### 4) Gestor de demanda SEM hospital (deve dar 400)
+POST {{url}}/usuarios
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.access_token}}
+
+{
+  "perfil": "GESTOR_DEMANDA",
+  "nomeCompleto": "Gestor Teste",
+  "email": "gestor.teste@hemovida.com",
+  "senha": "Senha12345"
+}
+
+### 5) Gestor de demanda COM hospital (deve dar 201)
+POST {{url}}/usuarios
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.access_token}}
+
+{
+  "perfil": "GESTOR_DEMANDA",
+  "nomeCompleto": "Gestor Teste",
+  "email": "gestor.teste@hemovida.com",
+  "senha": "Senha12345",
+  "hospitalId": 1
+}
+
+### 6) Listar (deve mostrar so a equipe, sem senha)
+GET {{url}}/usuarios?page=1&limit=10
+Authorization: Bearer {{login.response.body.access_token}}
+
+### 7) Buscar um (troque o 1 pelo id que apareceu)
+GET {{url}}/usuarios/1
+Authorization: Bearer {{login.response.body.access_token}}
+
+### 8) Editar nome
+PUT {{url}}/usuarios/1
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.access_token}}
+
+{ "nomeCompleto": "Ana Teste Editada" }
+
+### 9) Desativar (204, a linha NAO e apagada)
+DELETE {{url}}/usuarios/1
+Authorization: Bearer {{login.response.body.access_token}}
+
+### 10) Reativar
+PUT {{url}}/usuarios/1
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.access_token}}
+
+{ "ativo": true }
+
+### ===== PASSO 5 =====
+### Antes: ponha no .env  SERVICE_KEY=(48+ caracteres)  e  MS1_BASE_URL=http://localhost:7501
+### e reinicie a API. Troque SUA_SERVICE_KEY abaixo pelo mesmo valor.
+
+### 11) Criar usuario DOADOR (chamada que o MS1 fara) - 201 e {"id": N}
+POST {{url}}/internal/usuarios/doador
+Content-Type: application/json
+x-service-key: YQj51jlk9VdkkEjnM9XfbtRss4kqpXCRwrOVOZquVuxpmnNRUr2DwgWGOnkK7NF8
+
+{ "cpf": "529.982.247-25", "nomeCompleto": "Maria Doadora Teste" }
+
+### 12) Repetir (deve dar 200 e o MESMO id, sem duplicar)
+POST {{url}}/internal/usuarios/doador
+Content-Type: application/json
+x-service-key: YQj51jlk9VdkkEjnM9XfbtRss4kqpXCRwrOVOZquVuxpmnNRUr2DwgWGOnkK7NF8
+
+{ "cpf": "52998224725" }
+
+### 13) Sem a chave (deve dar 401)
+POST {{url}}/internal/usuarios/doador
+Content-Type: application/json
+
+{ "cpf": "52998224725" }
+
+### 14) Login do doador. Enquanto o MS1 nao tiver o endpoint, o esperado e 503.
+POST {{url}}/auth/login/doador
+Content-Type: application/json
+
+{ "cpf": "52998224725", "dataNascimento": "1990-05-17" }
+
+### 15) Desativar o usuario doador (troque o 1 pelo id do bloco 11) - 204
+POST {{url}}/internal/usuarios/9/desativar
+x-service-key: YQj51jlk9VdkkEjnM9XfbtRss4kqpXCRwrOVOZquVuxpmnNRUr2DwgWGOnkK7NF8
