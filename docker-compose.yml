@@ -1,0 +1,21 @@
+services:
+  hemovida-usuarios:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: hemovida_usuarios:latest
+
+    container_name: hemovida_usuarios
+
+    restart: unless-stopped
+
+    ports:
+      - "7505:7505"
+
+    env_file:
+      - .env
+
+    environment:
+      NODE_ENV: production
+      PORT: "7505"
