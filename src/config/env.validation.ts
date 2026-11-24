@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Matches,
   Max,
@@ -33,6 +34,13 @@ class EnvironmentVariables {
   @Min(1)
   @Max(65535)
   PORT!: number;
+
+  // Quantos proxies confiaveis (gateway) ficam na frente do MS4. Veja main.ts.
+  @IsOptional()
+  @IsInt({ message: 'TRUST_PROXY deve ser um numero inteiro' })
+  @Min(0)
+  @Max(5)
+  TRUST_PROXY?: number;
 
   // Primeiro ADMIN (passo 4). Opcionais, mas se um for informado o outro tambem e obrigatorio.
   // Integracao com o MS1 (passo 5). Sem elas, o login de doador responde 503 e os

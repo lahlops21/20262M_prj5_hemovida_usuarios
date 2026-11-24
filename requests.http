@@ -11,8 +11,8 @@ POST {{url}}/auth/login/admin
 Content-Type: application/json
 
 {
-  "email": "admin@hemovida.com",
-  "senha": "hemoLBR*&senac"
+  "email": "admin.teste@hemovida.com",
+  "senha": "AdminTeste123"
 }
 
 ### 0b) Sem token (deve dar 401)
@@ -109,14 +109,14 @@ Authorization: Bearer {{login.response.body.access_token}}
 ### 11) Criar usuario DOADOR (chamada que o MS1 fara) - 201 e {"id": N}
 POST {{url}}/internal/usuarios/doador
 Content-Type: application/json
-x-service-key: YQj51jlk9VdkkEjnM9XfbtRss4kqpXCRwrOVOZquVuxpmnNRUr2DwgWGOnkK7NF8
+x-service-key: SUA_SERVICE_KEY
 
 { "cpf": "529.982.247-25", "nomeCompleto": "Maria Doadora Teste" }
 
 ### 12) Repetir (deve dar 200 e o MESMO id, sem duplicar)
 POST {{url}}/internal/usuarios/doador
 Content-Type: application/json
-x-service-key: YQj51jlk9VdkkEjnM9XfbtRss4kqpXCRwrOVOZquVuxpmnNRUr2DwgWGOnkK7NF8
+x-service-key: SUA_SERVICE_KEY
 
 { "cpf": "52998224725" }
 
@@ -133,5 +133,5 @@ Content-Type: application/json
 { "cpf": "52998224725", "dataNascimento": "1990-05-17" }
 
 ### 15) Desativar o usuario doador (troque o 1 pelo id do bloco 11) - 204
-POST {{url}}/internal/usuarios/9/desativar
-x-service-key: YQj51jlk9VdkkEjnM9XfbtRss4kqpXCRwrOVOZquVuxpmnNRUr2DwgWGOnkK7NF8
+POST {{url}}/internal/usuarios/1/desativar
+x-service-key: SUA_SERVICE_KEY
