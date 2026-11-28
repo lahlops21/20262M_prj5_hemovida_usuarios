@@ -1,10 +1,12 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import type { JwtPayload } from '../auth/auth.types';
 import { Prisma } from '../generated/prisma/client';
 import { Perfil } from '../generated/prisma/enums';
 import { PrismaService } from '../prisma/prisma.service';
@@ -46,6 +48,35 @@ export class UsuariosService {
       },
     });
     return paraResposta(usuario);
+  }
+
+  // GET /usuarios/nomes?ids=1,13 - so id e nome, nunca e-mail, CPF ou matricula.
+  // ADMIN enxerga toda a equipe. GESTOR_DEMANDA enxerga so gestores de demanda do mesmo hospital
+  // (o hospital vem do token). Id que nao existe ou fora do alcance simplesmente nao aparece na lista.
+  async buscarNomes(solicitante: JwtPayload, ids: number[]) {
+    const where: Prisma.UsuarioWhereInput = {
+      usuario_id: { in: [...new Set(ids)].map((id) => BigInt(id)) },
+    };
+
+    if (solicitante.role === Perfil.GESTOR_DEMANDA) {
+      if (solicitante.hospitalId === undefined) {
+        throw new ForbiddenException('Usuario sem hospital vinculado.');
+      }
+      where.usuario_perfil = Perfil.GESTOR_DEMANDA;
+      where.usuario_hospital_id = BigInt(solicitante.hospitalId);
+    } else {
+      where.usuario_perfil = { in: [...PERFIS_EQUIPE] };
+    }
+
+    const usuarios = await this.prisma.usuario.findMany({
+      where,
+      select: { usuario_id: true, usuario_nome_completo: true },
+      orderBy: { usuario_id: 'asc' },
+    });
+    return usuarios.map((u) => ({
+      id: Number(u.usuario_id),
+      nomeCompleto: u.usuario_nome_completo,
+    }));
   }
 
   // GET /usuarios?page=1&limit=10&perfil=...&ativo=...
