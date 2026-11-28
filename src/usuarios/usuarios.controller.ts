@@ -9,9 +9,12 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
+import type { JwtPayload } from '../auth/auth.types';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { UsuarioAtual } from '../auth/decorators/usuario-atual.decorator';
 import { Perfil } from '../generated/prisma/enums';
 import { lerId } from '../common/helpers/id';
+import { ConsultarNomesQueryDto } from './dto/consultar-nomes-query.dto';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { ListarUsuariosQueryDto } from './dto/listar-usuarios-query.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
@@ -31,6 +34,17 @@ export class UsuariosController {
   @Get()
   listar(@Query() query: ListarUsuariosQueryDto) {
     return this.usuariosService.listar(query);
+  }
+
+  // Devolve so { id, nomeCompleto }, para as telas mostrarem "quem fez" algo (ex.: quem pediu o sangue).
+  // O gestor de demanda so enxerga gestores do PROPRIO hospital. Fica ANTES de ':id' de proposito.
+  @Get('nomes')
+  @Roles(Perfil.ADMIN, Perfil.GESTOR_DEMANDA)
+  nomes(
+    @UsuarioAtual() solicitante: JwtPayload,
+    @Query() query: ConsultarNomesQueryDto,
+  ) {
+    return this.usuariosService.buscarNomes(solicitante, query.ids);
   }
 
   @Get(':id')
